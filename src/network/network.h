@@ -3,7 +3,11 @@
 
 #include <memory>
 #include <string>
+
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
 
 class Exception {
     public:
@@ -31,7 +35,7 @@ class TCP_Server {
         struct sockaddr_in ServAddr;
         TCP_Client client;
         map<int,int> socket_map;
-        void sendBackData(int clientSock, const char* data, int size);
+        bool sendBackData(int clientSock, const char* data, int size);
 }
 
 class TCP_Client {

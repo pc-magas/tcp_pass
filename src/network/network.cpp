@@ -38,7 +38,7 @@ void TCPServer::listen(){
        std::clog << "Handling connection from: " << inet_ntoa(RecvServAddr.sin_addr) << std::endl;
 
        int client_socket = client->connect(this->sendBackData);
-       this->socket_map->insert(pair<int,int>(client_socket,recvServSock));
+       this->socket_map.insert(pair<int,int>(client_socket,recvServSock));
 
        auto handler = [](int recvServSock, TCP_Client client){
            std::vector<char> storage(buffLen);
@@ -55,10 +55,19 @@ void TCPServer::listen(){
     }
 }
 
-void TCPServer::sendBackData(int clientSock, const char* data, int size){
-    int servSock = this->socket_map-[clientSock];
+bool TCPServer::sendBackData(int clientSock, const char* data, int size){
 
+    map<string,string>::iterator i =  this->socket_map.find(clientSock);
+    int servSock;
+
+    if( i == this->socket_map.end()){
+        return false;
+    }
     
+    servSock = i->first;
+    send(servSock,data,size,0);
+
+    return true;
 }
 
 TCPServer::~TCPServer(){
