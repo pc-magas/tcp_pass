@@ -1,6 +1,5 @@
 #include "network.h"
 
-
 TCP_Server::TCP_Server(string address, int port, TCP_Client client)::servSock(::socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)),client(client){
     
     if (this->servSock < 0) {

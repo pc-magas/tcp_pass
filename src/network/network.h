@@ -8,6 +8,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include <netinet/in.h>
+#include <netdb.h>
 
 class Exception {
     public:
@@ -40,12 +42,14 @@ class TCP_Server {
 
 class TCP_Client {
     public:
-        TCP_Client(std::string address, int port)
+        TCP_Client(std::string address, int port);
         ~TCP_Client(){};
         int send(const char* receivedBuffer, int recvSize);
         auto onReceive();
         void close();
         auto setReceiveHandler();
+    private:
+        struct hostend *phe;
 }
 
 #endif
