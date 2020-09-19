@@ -31,7 +31,7 @@ void TCPServer::listen(){
 
     for (;;) {
     
-       if ((recvServSock = accept(servSock, (struct sockaddr *) &ClntAddr, &clntLen)) < 0) {
+       if ((recvServSock = accept(this->servSock, (struct sockaddr *) &ClntAddr, &clntLen)) < 0) {
            std::clog<<"Failed to fetch"<<std::endl;
            continue;
        }
@@ -74,3 +74,5 @@ TCPServer::~TCPServer(){
  ::close(this->servSock);
  this->client->close();
 }
+
+
