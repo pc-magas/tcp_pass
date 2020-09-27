@@ -1,6 +1,6 @@
 #include "network.h"
 
-TCP_Server::TCP_Server(std::string address, unsigned int port, TCP_Client client):servSock(::socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)),client(client){
+TCP_Server::TCP_Server(std::string address, unsigned int port, TCP_Client client, Socket_Transfer transfer):servSock(::socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)),client(client),handler(transfer){
     
     if (this->servSock < 0) {
         throw NetworkException(std::string("SOCKET Error: could not create basic socket"));
@@ -26,48 +26,33 @@ void TCP_Server::listen(){
 
     struct sockaddr_in RecvServAddr;     /* Address that performed a connection to the server */
     socklen_t recvServLen = (socklen_t)sizeof(RecvServAddr);
-    int recvServSock;                    /* Socket descriptor for client */
+    int serverSocket;                    /* Socket descriptor for client */
 
     for (;;) {
     
-       if ((recvServSock = accept(this->servSock, (struct sockaddr *) &RecvServAddr, &recvServLen)) < 0) {
+       if ((serverSocket = accept(this->servSock, (struct sockaddr *) &RecvServAddr, &recvServLen)) < 0) {
            std::clog<<"Failed to fetch"<<std::endl;
            continue;
        }
        std::clog << "Handling connection from: " << inet_ntoa(RecvServAddr.sin_addr) << std::endl;
 
-       int client_socket = this->client.connect(&this);
-       this->socket_map.insert(std::pair<int,int>(client_socket,recvServSock));
-
-       auto handler = [](int recvServSock, TCP_Client client, int client_socket){
-           std::vector<char> storage(READBUFFLEN);
-           char *const buffer = storage.data();
-           int recvSize=0;
-        
-           while ((recvSize = ::recv(recvServSock, buffer, READBUFFLEN-1, 0)) > 0) {
-                client.send(buffer,recvSize,client_socket);
-           }
-
-           return;
-       };
-
-       std::thread handleConnectionThread(handler, recvServSock, client, client_socket);
-       handleConnectionThread.detach();
+       int clientSocket = this->client.connect();
+       this->handler.setConnectionPair(serverSocket, clientSocket);
     }
 }
 
-void TCP_Server::sendBackData(int clientSock, const char* data, int size){
+// void TCP_Server::sendBackData(int clientSock, const char* data, int size){
 
-    std::map<int,int>::iterator i =  this->socket_map.find(clientSock);
-    int servSock;
+//     std::map<int,int>::iterator i =  this->socket_map.find(clientSock);
+//     int servSock;
 
-    if( i == this->socket_map.end()){
-        return;
-    }
+//     if( i == this->socket_map.end()){
+//         return;
+//     }
     
-    servSock = i->second;
-    send(servSock,data,size,0);
-}
+//     servSock = i->second;
+//     send(servSock,data,size,0);
+// }
 
 TCP_Server::~TCP_Server(){
  ::close(this->servSock);

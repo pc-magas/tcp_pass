@@ -25,7 +25,7 @@ class TCP_Client;
 #include <netinet/in.h>
 #include <netdb.h>
 
-#define MAXPENDING 100
+#define MAXPENDING 5
 #define READBUFFLEN 1024
 
 class Exception {
@@ -46,28 +46,38 @@ class TCP_Client {
         TCP_Client(std::string address, unsigned int port);
         ~TCP_Client();
         int send(const char* receivedBuffer, int recvSize, int client_socket);
-        int connect(TCP_Server *server);
+        int connect();
         void close();
     private:
         struct sockaddr_in sin;
-        std::map<int,TCP_Server> sendback_data_server;
+        struct hostent *host_entry;
 };
 
+/**
+* Syncronizes data between 2 sockets
+*/
+void transferSocket(int source, int dest);
+
+/**
+* Tranfers data Between server and client socket
+*/
+class Socket_Transfer{
+    public:
+        void setConnectionPair(int server_socket, int client_socket);
+};
 
 class TCP_Server {
     public:
-        TCP_Server(std::string address, unsigned int port, TCP_Client client);
+        TCP_Server(std::string address, unsigned int port, TCP_Client client, Socket_Transfer transfer);
         ~TCP_Server();
     private:
         //Socket file Descriptor
         int servSock;
         struct sockaddr_in ServAddr;
         TCP_Client client;
-        std::map<int,int> socket_map;
+        Socket_Transfer handler;
         void listen();
-        void sendBackData(int clientSock, const char* data, int size);
 };
-
 
 
 #endif
