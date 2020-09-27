@@ -36,15 +36,15 @@ void TCP_Server::listen(){
        }
        std::clog << "Handling connection from: " << inet_ntoa(RecvServAddr.sin_addr) << std::endl;
 
-       int client_socket = this->client.connect(this);
+       int client_socket = this->client.connect(&this);
        this->socket_map.insert(std::pair<int,int>(client_socket,recvServSock));
 
        auto handler = [](int recvServSock, TCP_Client client, int client_socket){
-           std::vector<char> storage(BUFFLEN);
+           std::vector<char> storage(READBUFFLEN);
            char *const buffer = storage.data();
            int recvSize=0;
         
-           while ((recvSize = ::recv(recvServSock, buffer, BUFFLEN-1, 0)) > 0) {
+           while ((recvSize = ::recv(recvServSock, buffer, READBUFFLEN-1, 0)) > 0) {
                 client.send(buffer,recvSize,client_socket);
            }
 
@@ -65,7 +65,7 @@ void TCP_Server::sendBackData(int clientSock, const char* data, int size){
         return;
     }
     
-    servSock = i.second;
+    servSock = i->second;
     send(servSock,data,size,0);
 }
 
