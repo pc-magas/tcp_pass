@@ -46,6 +46,7 @@ void Socket_Transfer::setConnectionPair(int server_socket, int client_socket){
 
 void transferSocket(int source, int dest){
     char buffer[READBUFFLEN];
+    std::clog<<"transfering DATA"<<std::endl;
     while(true){
         std::memset(&buffer,0,READBUFFLEN);
         size_t read_size = recv(source, buffer, READBUFFLEN, 0);
@@ -86,13 +87,17 @@ TCP_Server::TCP_Server(std::string address, unsigned int port, TCP_Client client
 
 void TCP_Server::listen(){
 
+    std::clog<<"LISTENING FOR CONNECTIONS"<<std::endl;
+
     struct sockaddr_in RecvServAddr;     /* Address that performed a connection to the server */
     socklen_t recvServLen = (socklen_t)sizeof(RecvServAddr);
     int serverSocket;                    /* Socket descriptor for client */
 
-    for (;;) {
-    
-       if ((serverSocket = accept(this->servSock, (struct sockaddr *) &RecvServAddr, &recvServLen)) < 0) {
+    while (true) {
+       std::clog<<"aTTEMPTING TO DETCH CONNECTION"<<std::endl;
+       serverSocket = accept(this->servSock, (struct sockaddr *) &RecvServAddr, &recvServLen);
+       std::clog<<"SOCKET Id "<<serverSocket<<std::endl;
+       if ( serverSocket < 0) {
            std::clog<<"Failed to fetch"<<std::endl;
            continue;
        }
