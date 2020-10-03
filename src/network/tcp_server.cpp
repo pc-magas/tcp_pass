@@ -1,5 +1,67 @@
 #include "network.h"
 
+TCP_Client::TCP_Client(std::string address, unsigned int port):host_entry(gethostbyname(address.c_str())){
+    
+    if(port == 0){
+        throw NetworkException(std::string("Client Error: port cannot be 0"));
+    }
+
+    std::memset(&(this->sin),0,sizeof(sin));
+    this->sin.sin_port =  htons(port);
+    
+    if(host_entry){
+        std::memcpy(&(this->sin),host_entry->h_addr,host_entry->h_length);
+    } else {
+        this->sin.sin_addr.s_addr =  inet_addr(address.c_str());
+    }
+    
+    if( ((this->sin).sin_addr.s_addr) == INVALID_ADDRESS){
+        throw NetworkException(std::string("Client Error: Could not find the address for " + address));
+    }
+}
+
+TCP_Client::~TCP_Client(){
+}
+
+int TCP_Client::connect(){
+
+    int clientSocket = socket(PF_INET, SOCK_STREAM, 6);
+
+    if(clientSocket < 0 ){
+        throw NetworkException(std::string("Client Error: unable to allocate client socket"));
+    }
+
+    if( ( ::connect( clientSocket, (struct sockaddr*)&sin, sizeof(sin) ) ) < 0 ){
+        throw NetworkException(std::string("Client Error: unable to Connect"));
+    }
+
+    return clientSocket;
+}
+
+void Socket_Transfer::setConnectionPair(int server_socket, int client_socket){
+    std::thread serverToClient(transferSocket,server_socket,client_socket);
+    std::thread clientToServer(transferSocket,server_socket,client_socket);
+}
+
+
+void transferSocket(int source, int dest){
+    char buffer[READBUFFLEN];
+    while(true){
+        std::memset(&buffer,0,READBUFFLEN);
+        size_t read_size = recv(source, buffer, READBUFFLEN, 0);
+
+        // @todo check whether causes unexpected termimation
+        if(read_size <= 0){
+            close(source);
+            close(dest);
+            return;
+        }
+
+        send(dest,buffer,read_size,0);
+    }
+}
+
+
 TCP_Server::TCP_Server(std::string address, unsigned int port, TCP_Client client, Socket_Transfer transfer):servSock(::socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)),client(client),handler(transfer){
     
     if (this->servSock < 0) {
@@ -40,19 +102,6 @@ void TCP_Server::listen(){
        this->handler.setConnectionPair(serverSocket, clientSocket);
     }
 }
-
-// void TCP_Server::sendBackData(int clientSock, const char* data, int size){
-
-//     std::map<int,int>::iterator i =  this->socket_map.find(clientSock);
-//     int servSock;
-
-//     if( i == this->socket_map.end()){
-//         return;
-//     }
-    
-//     servSock = i->second;
-//     send(servSock,data,size,0);
-// }
 
 TCP_Server::~TCP_Server(){
  ::close(this->servSock);

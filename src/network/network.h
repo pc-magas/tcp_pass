@@ -70,13 +70,14 @@ class TCP_Server {
     public:
         TCP_Server(std::string address, unsigned int port, TCP_Client client, Socket_Transfer transfer);
         ~TCP_Server();
+        void listen();
     private:
         //Socket file Descriptor
         int servSock;
         struct sockaddr_in ServAddr;
         TCP_Client client;
         Socket_Transfer handler;
-        void listen();
+        
 };
 
 
